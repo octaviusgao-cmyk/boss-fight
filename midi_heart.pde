@@ -1,0 +1,403 @@
+float floory = 420;
+
+//boss variables
+float bossx = 370;
+float bossy = floory;
+float bossw = 60;
+float bossh = 100;
+float bossvy = 0;
+boolean bossonground = true;
+int bosshp = 300;
+
+
+//player variables
+float playerx = 200;
+float playery = floory;
+float playerw = 36;
+float playerh = 60;
+float playervy = 0;
+boolean playeronground = true;
+int playerhp = 5;
+int hittimer = 0;
+boolean ready = false;
+int readycount = 0;
+int healcount = 0;
+
+//attack variables
+int attacktimer = 0;
+int attackstate = 0;
+float lungespeed = 0;
+float jumpspeed = 14;
+float bossExpand = 0;
+
+//center
+float bosscx = bossx + bossw / 2;
+float bosscy = bossy - bossh / 2;
+float playercx = playerx + playerw / 2;
+float playercy = playery - playerh / 2;
+
+//keyboard booleans
+boolean leftkey = false;
+boolean rightkey = false;
+boolean jumpkey = false;
+boolean shiftkey = false;
+boolean shiftkey2 = false;
+boolean attackkey = false;
+
+void setup() {
+  size(800, 500);
+}
+
+void draw() {
+  background(0);
+
+
+  fill(255);
+  noStroke();
+  rect(0, 0, 30, height);
+
+  rect(width - 30, 0, 30, height);
+
+  rect(0, floory + 10, width, height);
+
+  moveBoss();
+  movePlayer();
+  damage();
+  player();
+  hearts();
+
+  if (bosshp > 0) {
+    boss();
+  }
+  if (playerhp <= 0) {
+    bosshp = 300;
+    playerhp = 5;
+  }
+}
+
+void moveBoss() {
+  //gravity
+  bossvy = bossvy + 0.6;
+  bossy = bossy + bossvy;
+
+
+  if (bossy >= floory) {
+    bossy = floory;
+    bossvy = 0;
+    bossonground = true;
+  }
+
+  //telegraph
+  if (attackstate == 0) {
+    attacktimer = attacktimer + 1;
+
+    if (attacktimer >= 120) {
+      attacktimer = 0;
+      attackstate = 1;
+
+      if (playerx > bossx) {
+        lungespeed = 14;
+      }
+      if (playerx <= bossx) {
+        lungespeed = -14;
+      }
+    }
+  }
+
+  //idle
+  if (attackstate == 1) {
+    attacktimer = attacktimer + 1;
+
+    if (attacktimer >= 50) {
+      attacktimer = 0;
+      attackstate = int(random(2, 6));
+    }
+  }
+
+  //lunging
+  if (attackstate == 2) {
+    bossx = bossx + lungespeed;
+
+    if (bossx < 30) {
+      bossx = 30;
+      attackstate = 0;
+    }
+    if (bossx + bossw > width - 30) {
+      bossx = width - 30 - bossw;
+      attackstate = 0;
+    }
+  }
+
+  if (bossx < 30) {
+    bossx = 30;
+  }
+
+  if (bossx + bossw > width - 30) {
+    bossx = width - 30 - bossw;
+  }
+
+
+  if (attackstate == 3) {
+    bossy = bossy - jumpspeed;
+    bossy = 200;
+    attacktimer++;
+    bossonground = false;
+    if (attacktimer > 100 && bossy == 200 && attacktimer < 500) {
+      if (playerx > bossx) {
+        bossx = bossx + 14;
+        attacktimer++;
+      } else if (playerx < bossx) {
+        bossx = bossx - 14;
+        attacktimer++;
+      }
+    }
+    if (attacktimer >= 550) {
+      bossy = bossy + jumpspeed;
+      bossy = floory;
+      attackstate = 0;
+    }
+  }
+
+
+  if (attackstate == 4) {
+    if (bossonground) {
+      bossvy = -18;
+      bossonground = false;
+      attacktimer = 0;
+      if (playerx > bossx) {
+        lungespeed = 14;
+        attackstate = 0;
+      } else {
+        lungespeed = -14;
+        attackstate = 0;
+      }
+    }
+
+    if (bossvy >= 0 && !bossonground) {
+      bossx = bossx + lungespeed;
+    }
+
+    if (bossx < 30) {
+      bossx = 30;
+      attackstate = 0;
+    }
+    if (bossx + bossw > width - 30) {
+      bossx = width - 30 - bossw;
+      attackstate = 0;
+    }
+
+    if (bossonground) {
+      attackstate = 0;
+    }
+  }
+
+  if (attackstate == 5) {
+    attacktimer++;
+
+    if (attacktimer < 60) {
+      bossExpand = attacktimer * 1.5;
+    } else if (attacktimer < 120) {
+      bossExpand = (120 - attacktimer) * 1.5;
+    } else {
+      bossExpand = 0;
+      attacktimer = 0;
+      attackstate = 0;
+    }
+  }
+}
+
+void movePlayer() {
+
+  if (leftkey) {
+    playerx = playerx - 4;
+  }
+
+  if (rightkey) {
+    playerx = playerx + 4;
+  }
+  if (shiftkey) {
+    playerx = playerx - 15;
+  }
+  if (shiftkey2) {
+    playerx = playerx + 15;
+  }
+
+  if (jumpkey && playeronground) {
+    playervy = -13;
+    playeronground = false;
+  }
+
+
+  playervy = playervy + 0.6;
+  playery  = playery + playervy;
+
+
+  if (playery >= floory) {
+    playery = floory;
+    playervy = 0;
+    playeronground = true;
+  }
+
+
+  if (playerx < 30) {
+    playerx = 30;
+  }
+
+
+  if (playerx + playerw > width - 30) {
+    playerx = width - 30 - playerw;
+  }
+}
+
+void damage() {
+
+
+  if (hittimer > 0) {
+    hittimer = hittimer - 1;
+  }
+
+  //damage when close + i frame
+  bosscx = bossx + bossw / 2;
+  bosscy = bossy - bossh / 2;
+  playercx = playerx + playerw / 2;
+  playercy = playery - playerh / 2;
+
+
+
+  if (hittimer > 0) {
+    hittimer = hittimer - 1;
+  }
+
+  if (dist(bosscx, bosscy, playercx, playercy) < (bossw + bossExpand + playerw) / 2 && hittimer == 0) {
+    playerhp = playerhp - 1;
+    hittimer = 60;
+  }
+}
+
+
+void boss() {
+  stroke(23, 157, 227);
+  text(bosshp + " / 300", width/2, 30);
+  if (readycount >= 550) {
+    text("Ready to strike! Get close and press s", width/2, 50);
+  }
+  if (healcount >= 1000) {
+    text("Ready to heal! Press s to heal", width/2, 70);
+  }
+
+  rect(bossx - bossExpand/2, bossy - bossh - bossExpand, bossw + bossExpand, bossh + bossExpand);
+
+  if (attackstate == 1 && frameCount % 8 < 4) {
+    fill(255);
+  } else if (attackstate != 1) {
+    fill(255);
+  } else {
+    noFill();
+  }
+  noStroke();
+  rect(bossx - bossExpand/2, bossy - bossh - bossExpand, bossw + bossExpand, bossh + bossExpand);
+
+  // hitbox 
+  stroke(255);
+  strokeWeight(2);
+  noFill();
+  rect(bossx - bossExpand/2, bossy - bossh - bossExpand, bossw + bossExpand, bossh + bossExpand);
+
+  //hitbox
+  stroke(255);
+  strokeWeight(2);
+  noFill();
+  rect(bossx, bossy - bossh, bossw, bossh);
+}
+
+void player() {
+  //i frames
+  if (hittimer > 0 && hittimer % 6 < 3) {
+    return;
+  }
+
+  if (readycount >= 550) {
+    stroke(224, 36, 36);
+    if (attackkey && dist(bosscx, bosscy, playercx, playercy) < 500) {
+      bosshp = bosshp - 30;
+      readycount = 0;
+    }
+  } else {
+    stroke(255);
+  }
+
+  if (healcount >= 1000) {
+    stroke(36, 224, 37);
+    if (attackkey) {
+      playerhp++;
+      healcount = 0;
+    }
+  }
+
+  strokeWeight(2);
+  noFill();
+  rect(playerx, playery - playerh, playerw, playerh);
+  readycount++;
+  healcount++;
+  stroke(255);
+  strokeWeight(2);
+  noFill();
+  rect(playerx, playery - playerh, playerw, playerh);
+
+  if (readycount == 550 && attackkey) {
+    bosshp = bosshp - 30;
+  }
+}
+
+
+
+
+void hearts() {
+
+  if (playerhp >= 1) {
+    fill(255);
+  } else {
+    noFill();
+  }
+  stroke(255);
+  strokeWeight(1);
+  ellipse(48, 25, 14, 14);
+  ellipse(58, 25, 14, 14);
+  triangle(41, 29, 65, 29, 53, 42);
+
+  if (playerhp >= 2) {
+    fill(255);
+  } else {
+    noFill();
+  }
+  ellipse(78, 25, 14, 14);
+  ellipse(88, 25, 14, 14);
+  triangle(71, 29, 95, 29, 83, 42);
+
+  if (playerhp >= 3) {
+    fill(255);
+  } else {
+    noFill();
+  }
+  ellipse(108, 25, 14, 14);
+  ellipse(118, 25, 14, 14);
+  triangle(101, 29, 125, 29, 113, 42);
+
+  if (playerhp >= 4) {
+    fill(255);
+  } else {
+    noFill();
+  }
+  ellipse(138, 25, 14, 14);
+  ellipse(148, 25, 14, 14);
+  triangle(131, 29, 155, 29, 143, 42);
+
+  if (playerhp >= 5) {
+    fill(255);
+  } else {
+    noFill();
+  }
+  ellipse(168, 25, 14, 14);
+  ellipse(178, 25, 14, 14);
+  triangle(161, 29, 185, 29, 173, 42);
+}
